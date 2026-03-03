@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Guida Fattore di Rischio</title>
+    <!-- Inclusione di una font moderna -->
+    <link href="https://fonts.googleapis.com" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        h1 { color: var(--primary-color); font-size: 1.5rem; }
+        p { line-height: 1.6; color: #666; }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover { transform: scale(1.05); }
+
+        .qr-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container { padding: 1.5rem; }
+            h1 { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Guida al Calcolo del Fattore di Rischio</h1>
+    <p>Scarica il documento completo con le linee guida, le formule $R=P \times D$ e gli esempi pratici per la sicurezza sul lavoro.</p>
+    
+    <!-- Link al file PDF -->
+    <a href="guida-fattore-rischio.pdf" class="btn" download>SCARICA PDF</a>
+
+    <div class="qr-section">
+        <p><small>Scansiona il QR Code per accedere da mobile:</small></p>
+        <div id="qrcode"></div>
+    </div>
+</div>
+
+<!-- Script per generazione QR Code dinamico -->
+<script src="https://cdnjs.cloudflare.com"></script>
+<script>
+    // Genera il QR code che punta all'URL corrente della pagina
+    new QRCode(document.getElementById("qrcode"), {
+        text: window.location.href,
+        width: 128,
+        height: 128
+    });
+</script>
+
+</body>
+</html>
