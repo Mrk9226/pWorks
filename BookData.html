@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Lookup libro da ISBN (Open Library)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #131a2b;
+      --text: #e8eefc;
+      --muted: #9fb0d1;
+      --accent: #4cc9f0;
+      --danger: #ff6b6b;
+      --ok: #7bd88f;
+      --border: #2a3550;
+    }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1000px 600px at 20% -10%, #1a2440, #0b1020 60%);
+      color: var(--text);
+      min-height: 100vh; display: grid; place-items: start center;
+    }
+    .container {
+      width: min(920px, 92vw);
+      margin: 6vh auto 10vh;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+    header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 14px;
+      background: linear-gradient(180deg, rgba(76,201,240,0.12), transparent);
+    }
+    h1 { font-size: 1.1rem; margin: 0; letter-spacing: 0.2px; }
+    .badge { font: 600 12px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--accent); background: rgba(76,201,240,0.12); padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px; }
+
+    .controls {
+      padding: 20px 24px;
+      display: grid; grid-template-columns: 1fr auto; gap: 12px;
+    }
+    label { font-size: 0.95rem; color: var(--muted); display: block; margin-bottom: 6px; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
+    input[type="text"] {
+      width: 100%; font-size: 1rem; color: var(--text);
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; outline: none;
+    }
+    input[type="text"]::placeholder { color: #7c8db4; }
+    button {
+      height: 44px; padding: 0 16px; font-weight: 600; color: #081120;
+      background: linear-gradient(180deg, #4cc9f0, #37b3dc);
+      border: none; border-radius: 10px; cursor: pointer;
+      box-shadow: 0 6px 18px rgba(76,201,240,0.35);
+    }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .status {
+      padding: 8px 24px 0; min-height: 24px; font-size: 0.95rem;
+      color: var(--muted);
+    }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--danger); }
+
+    .table-wrap {
+      margin: 16px 24px 24px; overflow-x: auto; border: 1px solid var(--border); border-radius: 12px;
+      background: var(--card);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { text-align: left; font-weight: 700; color: var(--muted); width: 200px; }
+    tr:last-child td, tr:last-child th { border-bottom: 0; }
+    .cover {
+      display: inline-flex; align-items: center; gap: 12px;
+    }
+    .cover img {
+      width: 96px; height: auto; border-radius: 8px; border: 1px solid var(--border);
+      background: #0e1426;
+    }
+    .note { padding: 0 24px 24px; color: var(--muted); font-size: 0.9rem; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+    footer { padding: 14px 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main class="container" role="main">
+    <header>
+      <span class="badge">Open Library</span>
+      <h1>Ricerca libro da ISBN</h1>
+    </header>
+
+    <section class="controls" aria-labelledby="form-title">
+      <h2 id="form-title" class="sr-only">Inserisci ISBN e avvia ricerca</h2>
+      <div class="row">
+        <div>
+          <label for="isbn">ISBN (10 o 13 cifre, può contenere trattini)</label>
+          <input id="isbn" name="isbn" type="text" inputmode="numeric" placeholder="Es. 9788806239843" aria-describedby="isbn-help" />
+          <div id="isbn-help" class="sr-only">Inserisci un codice ISBN valido e premi Cerca</div>
+        </div>
+        <div>
+          <button id="btnSearch" type="button">Cerca</button>
+        </div>
+      </div>
+      <div id="status" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="table-wrap" aria-labelledby="result-title" hidden>
+      <h2 id="result-title" class="sr-only">Risultati libro</h2>
+      <table id="resultTable">
+        <tbody>
+          <tr>
+            <th scope="row">Copertina</th>
+            <td id="cell-cover"></td>
+          </tr>
+          <tr>
+            <th scope="row">Titolo</th>
+            <td id="cell-title">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Autori</th>
+            <td id="cell-authors">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Editore</th>
+            <td id="cell-publisher">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Data pubblicazione</th>
+            <td id="cell-date">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Pagine</th>
+            <td id="cell-pages">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Categorie</th>
+            <td id="cell-categories">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Link Open Library</th>
+            <td id="cell-link">–</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <p class="note">
+      Fonte dati: <a href="https://openlibrary.org/dev/docs/api/books" target="_blank" rel="noreferrer noopener">Open Library Books API</a>.
+    </p>
+
+    <footer>
+      Suggerimento: molti ISBN hanno anche la copertina disponibile via API; quando non presente, l’immagine resta vuota. [1](https://openlibrary.org/dev/docs/api/books)
+    </footer>
+  </main>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    const btn = $("#btnSearch");
+    const input = $("#isbn");
+    const statusEl = $("#status");
+    const tableWrap = document.querySelector(".table-wrap");
+
+    function normalizeISBN(raw) {
+      // Rimuove spazi e trattini, utile per gli input copiati
+      return (raw || "").replace(/[^\dXx]/g, "").toUpperCase();
+    }
+
+    function setStatus(msg, type = "") {
+      statusEl.textContent = msg;
+      statusEl.className = "status " + (type || "");
+    }
+
+    function setTableVisible(visible) {
+      tableWrap.hidden = !visible;
+    }
+
+    function populateTable(data, isbn) {
+      // Copertina: Open Library fornisce spesso cover piccole/medie tramite i campi "cover"
+      // Se non presente, proviamo il servizio copertine basato su cover ID.
+      const coverUrl = data.cover?.medium || data.cover?.small || null;
+
+      const authors = (data.authors || []).map(a => a.name).join(", ");
+      const publishers = (data.publishers || []).map(p => p.name).join(", ");
+      const subjects = (data.subjects || []).map(s => s.name || s).slice(0, 6).join(", ");
+
+      $("#cell-title").textContent = data.title || "—";
+      $("#cell-authors").textContent = authors || "—";
+      $("#cell-publisher").textContent = publishers || "—";
+      $("#cell-date").textContent = data.publish_date || data.publishDate || "—";
+      $("#cell-pages").textContent = data.number_of_pages || data.pagination || "—";
+      $("#cell-categories").textContent = subjects || "—";
+
+      const workOrBookUrl = (data.url || data.key) ? `https://openlibrary.org${data.url || data.key}` : `https://openlibrary.org/isbn/${isbn}`;
+      $("#cell-link").innerHTML = `<a href="${workOrBookUrl}" target="_blank     const coverCell = $("#cell-cover");
+      coverCell.innerHTML = "";
+      if (coverUrl) {
+        const img = document.createElement("img");
+        img.src = coverUrl;
+        img.alt = `Copertina di ${data.title || "libro"}`;
+        img.decoding = "async";
+        img.loading = "lazy";
+        coverCell.classList.add("cover");
+        coverCell.appendChild(img);
+      } else {
+        coverCell.textContent = "—";
+      }
+    }
+
+    async function fetchFromOpenLibrary(isbn) {
+      // Endpoint documentato: https://openlibrary.org/dev/docs/api/books
+      // Esempio: /api/books?bibkeys=ISBN:{ISBN}&format=json&jscmd=data
+      const url = `https://openlibrary.org/api/books?bibkeys=ISBN:${encodeURIComponent(isbn)}&format=json&jscmd=data`;
+      const res = await fetch(url, { headers: { "Accept": "application/json" } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      return json[`ISBN:${isbn}`] || null;
+    }
+
+    async function onSearch() {
+      const raw = input.value.trim();
+      const isbn = normalizeISBN(raw);
+
+      setTableVisible(false);
+
+      if (!isbn) {
+        setStatus("Inserisci un ISBN.", "err");
+        return;
+      }
+      if (!/^\d{10}$|^\d{13}$/.test(isbn)) {
+        // accettiamo anche X finale per ISBN-10, ma Open Library gestisce entrambe
+        if (!/^\d{9}[\dX]$/.test(isbn)) {
+          setStatus("Formato ISBN non valido. Usa 10 o 13 cifre (trattini opzionali).", "err");
+          return;
+        }
+      }
+
+      btn.disabled = true;
+      setStatus("Ricerca in corso…");
+
+      try {
+        const data = await fetchFromOpenLibrary(isbn);
+        if (!data) {
+          setStatus("Nessun risultato trovato per questo ISBN su Open Library.", "err");
+          return;
+        }
+        populateTable(data, isbn);
+        setTableVisible(true);
+        setStatus("Dati caricati correttamente.", "ok");
+      } catch (err) {
+        console.error(err);
+        setStatus("Errore durante la richiesta a Open Library. Riprova.", "err");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    btn.addEventListener("click", onSearch);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") onSearch();
+    });
+  </script>
+</body>
+</html>
