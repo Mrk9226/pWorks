@@ -39,8 +39,7 @@ function populateTable(data, isbn) {
     ? `https://openlibrary.org${data.url || data.key}`
     : `https://openlibrary.org/isbn/${isbn}`;
 
-  $("#cell-link").innerHTML =
-    `<a href="${workOrBookUrlBookUrl}</a>`;
+ $("#cell-link").innerHTML = `${workOrBookUrl}${workOrBookUrl}</a>`;
 
   const coverCell = $("#cell-cover");
   coverCell.innerHTML = "";
