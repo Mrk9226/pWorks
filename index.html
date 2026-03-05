@@ -1,100 +1,163 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download Guida Fattore di Rischio</title>
-    <!-- Inclusione di una font moderna -->
-    <link href="https://fonts.googleapis.com" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --accent-color: #e74c3c;
-            --bg-color: #f4f7f6;
-        }
+  <meta charset="utf-8" />
+  <title>Lookup libro da ISBN (Open Library)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #131a2b;
+      --text: #e8eefc;
+      --muted: #9fb0d1;
+      --accent: #4cc9f0;
+      --danger: #ff6b6b;
+      --ok: #7bd88f;
+      --border: #2a3550;
+    }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1000px 600px at 20% -10%, #1a2440, #0b1020 60%);
+      color: var(--text);
+      min-height: 100vh; display: grid; place-items: start center;
+    }
+    .container {
+      width: min(920px, 92vw);
+      margin: 6vh auto 10vh;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+    header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 14px;
+      background: linear-gradient(180deg, rgba(76,201,240,0.12), transparent);
+    }
+    h1 { font-size: 1.1rem; margin: 0; letter-spacing: 0.2px; }
+    .badge { font: 600 12px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--accent); background: rgba(76,201,240,0.12); padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px; }
 
-        body {
-            font-family: 'Noto Sans', sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: #333;
-        }
+    .controls {
+      padding: 20px 24px;
+      display: grid; grid-template-columns: 1fr auto; gap: 12px;
+    }
+    label { font-size: 0.95rem; color: var(--muted); display: block; margin-bottom: 6px; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
+    input[type="text"] {
+      width: 100%; font-size: 1rem; color: var(--text);
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; outline: none;
+    }
+    input[type="text"]::placeholder { color: #7c8db4; }
+    button {
+      height: 44px; padding: 0 16px; font-weight: 600; color: #081120;
+      background: linear-gradient(180deg, #4cc9f0, #37b3dc);
+      border: none; border-radius: 10px; cursor: pointer;
+      box-shadow: 0 6px 18px rgba(76,201,240,0.35);
+    }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-        }
+    .status {
+      padding: 8px 24px 0; min-height: 24px; font-size: 0.95rem;
+      color: var(--muted);
+    }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--danger); }
 
-        h1 { color: var(--primary-color); font-size: 1.5rem; }
-        p { line-height: 1.6; color: #666; }
-
-        .btn {
-            display: inline-block;
-            background-color: var(--accent-color);
-            color: white;
-            padding: 12px 25px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            margin-top: 20px;
-            transition: transform 0.2s;
-        }
-
-        .btn:hover { transform: scale(1.05); }
-
-        .qr-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-
-        #qrcode {
-            display: flex;
-            justify-content: center;
-            margin-top: 15px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 600px) {
-            .container { padding: 1.5rem; }
-            h1 { font-size: 1.2rem; }
-        }
-    </style>
+    .table-wrap {
+      margin: 16px 24px 24px; overflow-x: auto; border: 1px solid var(--border); border-radius: 12px;
+      background: var(--card);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { text-align: left; font-weight: 700; color: var(--muted); width: 200px; }
+    tr:last-child td, tr:last-child th { border-bottom: 0; }
+    .cover { display: inline-flex; align-items: center; gap: 12px; }
+    .cover img {
+      width: 96px; height: auto; border-radius: 8px; border: 1px solid var(--border);
+      background: #0e1426;
+    }
+    .note { padding: 0 24px 24px; color: var(--muted); font-size: 0.9rem; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+    footer { padding: 14px 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
+  <main class="container" role="main">
+    <header>
+      <span class="badge">Open Library</span>
+      <h1>Ricerca libro da ISBN</h1>
+    </header>
 
-<div class="container">
-    <h1>Guida al Calcolo del Fattore di Rischio</h1>
-    <p>Scarica il documento completo con le linee guida, le formule $R=P \times D$ e gli esempi pratici per la sicurezza sul lavoro.</p>
-    
-    <!-- Link al file PDF -->
-    <a href="guida-fattore-rischio.pdf" class="btn" download>SCARICA PDF</a>
+    <section class="controls" aria-labelledby="form-title">
+      <h2 id="form-title" class="sr-only">Inserisci ISBN e avvia ricerca</h2>
+      <div class="row">
+        <div>
+          <label for="isbn">ISBN (10 o 13 cifre, può contenere trattini)</label>
+          <input id="isbn" name="isbn" type="text" inputmode="numeric" placeholder="Es. 9788806239843" aria-describedby="isbn-help" />
+          <div id="isbn-help" class="sr-only">Inserisci un codice ISBN valido e premi Cerca</div>
+        </div>
+        <div>
+          <button id="btnSearch" type="button">Cerca</button>
+        </div>
+      </div>
+      <div id="status" class="status" aria-live="polite"></div>
+    </section>
 
-    <div class="qr-section">
-        <p><small>Scansiona il QR Code per accedere da mobile:</small></p>
-        <div id="qrcode"></div>
-    </div>
-</div>
+    <section class="table-wrap" aria-labelledby="result-title" hidden>
+      <h2 id="result-title" class="sr-only">Risultati libro</h2>
+      <table id="resultTable">
+        <tbody>
+          <tr>
+            <th scope="row">Copertina</th>
+            <td id="cell-cover"></td>
+          </tr>
+          <tr>
+            <th scope="row">Titolo</th>
+            <td id="cell-title">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Autori</th>
+            <td id="cell-authors">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Editore</th>
+            <td id="cell-publisher">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Data pubblicazione</th>
+            <td id="cell-date">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Pagine</th>
+            <td id="cell-pages">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Categorie</th>
+            <td id="cell-categories">–</td>
+          </tr>
+          <tr>
+            <th scope="row">Link Open Library</th>
+            <td id="cell-link">–</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
 
-<!-- Script per generazione QR Code dinamico -->
-<script src="https://cdnjs.cloudflare.com"></script>
-<script>
-    // Genera il QR code che punta all'URL corrente della pagina
-    new QRCode(document.getElementById("qrcode"), {
-        text: window.location.href,
-        width: 128,
-        height: 128
-    });
-</script>
+    <p class="note">
+      Fonte dati: Open Library Books API.
+    </p>
 
+    <footer>
+      Suggerimento: quando la copertina non è disponibile nell’API, il campo resta vuoto.
+    </footer>
+  </main>
+
+  <!-- Script separato -->
+  ./app.js</script>
 </body>
 </html>
