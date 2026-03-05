@@ -21,6 +21,17 @@ function setTableVisible(visible) {
   tableWrap.hidden = !visible;
 }
 
+function clearTable() {
+  $("#cell-cover").innerHTML = "";
+  $("#cell-title").textContent = "—";
+  $("#cell-authors").textContent = "—";
+  $("#cell-publisher").textContent = "—";
+  $("#cell-date").textContent = "—";
+  $("#cell-pages").textContent = "—";
+  $("#cell-categories").textContent = "—";
+  $("#cell-link").innerHTML = "—";
+}
+
 function populateTable(data, isbn) {
   const coverUrl = data.cover?.medium || data.cover?.small || null;
 
@@ -31,7 +42,7 @@ function populateTable(data, isbn) {
   $("#cell-title").textContent = data.title || "—";
   $("#cell-authors").textContent = authors || "—";
   $("#cell-publisher").textContent = publishers || "—";
-  $("#cell-date").textContent = data.publish_date || data.publishDate || "—";
+  $("#cell-date").textContent = data.publish_date || data.publishedDate || "—";
   $("#cell-pages").textContent = data.number_of_pages || data.pagination || "—";
   $("#cell-categories").textContent = subjects || "—";
 
@@ -39,7 +50,9 @@ function populateTable(data, isbn) {
     ? `https://openlibrary.org${data.url || data.key}`
     : `https://openlibrary.org/isbn/${isbn}`;
 
- $("#cell-link").innerHTML = `${workOrBookUrl}${workOrBookUrl}</a>`;
+  // ✅ Link corretto (una sola volta, con tag <a> completo)
+  $("#cell-link").innerHTML =
+    `${workOrBookUrl}${workOrBookUrl}</a>`;
 
   const coverCell = $("#cell-cover");
   coverCell.innerHTML = "";
@@ -57,7 +70,7 @@ function populateTable(data, isbn) {
 }
 
 async function fetchFromOpenLibrary(isbn) {
-  // Endpoint documentato: /api/books?bibkeys=ISBN:{ISBN}&format=json&jscmd=data
+  // ⚠️ In JS usa & e NON &amp;
   const url = `https://openlibrary.org/api/books?bibkeys=ISBN:${encodeURIComponent(isbn)}&format=json&jscmd=data`;
   const res = await fetch(url, { headers: { "Accept": "application/json" } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -71,6 +84,7 @@ async function onSearch() {
   const isbn = normalizeISBN(raw);
 
   setTableVisible(false);
+  clearTable();
 
   if (!isbn) {
     setStatus("Inserisci un ISBN.", "err");
